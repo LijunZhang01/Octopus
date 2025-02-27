@@ -34,7 +34,7 @@ As shown in Fig. 2(b), we report the corresponding percentages and observe that 
 
  As shown in Fig. 3, we use ''strategy-1'', ''strategy-2'' and ''strategy-3'' to denote the hallucination mitigation strategies(i.e., VCD, M3ID and AVISC). Meanwhile, we exhibit the best scores from these combinations. Take “strategy 1+3” as an example, each of the three tokens has two selectable hallucination elimination strategies (i.e., strategy-1 and strategy-3), thus there are a total of 6 combinations. For simplicity, we only report the best results among these combinations. By comparing these scores, we find that leveraging multiple CD strategies can better suppress hallucinations. Therefore, we conclude that ***the hallucination causes are hybrid and each generative step faces different forms of challenge.***
 
-## Method: AvisC
+## Method: Octopus
 <p align="center" width="100%">
 <img src="assets/kuangjia.png" width="100%" alt="Motivation">
 </p>
