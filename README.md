@@ -12,7 +12,7 @@ This repository contains the official pytorch implementation of the CVPR2025 pap
 ## Updates
 We will update more detailed result (including dataset, training, verification) in the future
 
- * **2025.02.27**: Build project page
+- [x] **2025.02.27**: Build project page
 - [ ] :Add code and .sh file
 - [ ] :Add Dataset
 - [ ] :Add detailed process description
