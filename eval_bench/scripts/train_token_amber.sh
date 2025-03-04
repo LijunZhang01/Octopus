@@ -18,9 +18,7 @@ cd_alpha=2.5
 amber_path="/home/zlj/AvisC-master/"
 use_cd=False
 use_m3id=False
-# json_path="/home/zlj/AvisC-master/checkpoint/gendata_new/merged_file.json"
-# data_path="/home/zlj/AvisC-master/data/image"
-json_path="/home/zlj/AvisC-master/checkpoint/gendata_new_10000/merged_file_coco_10000.json"
+json_path="/home/zlj/Avisc-release/data/train.json"
 data_path="/home/zlj/AvisC-master/dataset/images/val2014"
 
 model_path="/home/zlj/AvisC-master/llava-v1.5-7b"
@@ -32,7 +30,6 @@ checkpoint_path="/home/zlj/AvisC-master/checkpoint/0123_shijian_sample"
 result_json_path="${checkpoint_path}/Amber_result.json"
 export CUDA_VISIBLE_DEVICES=${gpus}
 python /home/zlj/Avisc-release/eval_bench/train_token_amber.py \
-# python /home/zlj/AvisC-master/eval_bench/rebuttal_llava_gen.py \
     --seed ${seed} \
     --model-path ${model_path} \
     --json_path ${json_path} \
