@@ -23,7 +23,7 @@ We will update more detailed result (including dataset, training, verification) 
 - [x] **2025.03.04**:Add detailed process description
 
 
-## Motivation
+<!-- ## Motivation
 <p align="center" width="100%">
 <img src="assets/fig2.png" width="100%" alt="Motivation">
 </p>
@@ -34,7 +34,7 @@ As shown in Fig. 2(b), we report the corresponding percentages and observe that 
 <img src="assets/fig3.png" width="100%" alt="Motivation">
 </p>
 
- As shown in Fig. 3, we use ''strategy-1'', ''strategy-2'' and ''strategy-3'' to denote the hallucination mitigation strategies(i.e., VCD, M3ID and AVISC). Meanwhile, we exhibit the best scores from these combinations. Take “strategy 1+3” as an example, each of the three tokens has two selectable hallucination elimination strategies (i.e., strategy-1 and strategy-3), thus there are a total of 6 combinations. For simplicity, we only report the best results among these combinations. By comparing these scores, we find that leveraging multiple CD strategies can better suppress hallucinations. Therefore, we conclude that ***the hallucination causes are hybrid and each generative step faces different forms of challenge.***
+ As shown in Fig. 3, we use ''strategy-1'', ''strategy-2'' and ''strategy-3'' to denote the hallucination mitigation strategies(i.e., VCD, M3ID and AVISC). Meanwhile, we exhibit the best scores from these combinations. Take “strategy 1+3” as an example, each of the three tokens has two selectable hallucination elimination strategies (i.e., strategy-1 and strategy-3), thus there are a total of 6 combinations. For simplicity, we only report the best results among these combinations. By comparing these scores, we find that leveraging multiple CD strategies can better suppress hallucinations. Therefore, we conclude that ***the hallucination causes are hybrid and each generative step faces different forms of challenge.*** -->
 
 ## Method: Octopus
 <p align="center" width="100%">
@@ -79,14 +79,22 @@ The directory structure is as follows:
 * [**InstructBLIP**](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip): Download [InstructBLIP](https://huggingface.co/Salesforce/instructblip-vicuna-7b)
 
 ## Train
-* **AMBER**: `bash eval_bench/scripts/train_token_amber.sh`
-  - Need to specify "json_path", "data_path","checkpoint_path","model_path"
-ps:Replace all "/home/zlj/AvisC-master" paths with your own directory paths
+* **AMBER**: 
+```
+bash eval_bench/scripts/train_token_amber.sh
+```
+- Need to specify "json_path", "data_path","checkpoint_path","model_path"
+
+- ps: Replace all "/home/zlj/AvisC-master" paths with your own directory paths
 
 ## Evaluation
-* **AMBER**: `bash eval_bench/scripts/eval_token_amber.sh`
-  - Need to specify "json_path", "data_path","checkpoint_path","model_path"
-ps:Replace all "/home/zlj/AvisC-master" paths with your own directory paths
+* **AMBER**: 
+```
+bash eval_bench/scripts/eval_token_amber.sh
+```
+- Need to specify "json_path", "data_path","checkpoint_path","model_path"
+
+- ps: Replace all "/home/zlj/AvisC-master" paths with your own directory paths
 
 
 
@@ -105,10 +113,10 @@ ps:Replace all "/home/zlj/AvisC-master" paths with your own directory paths
 
 
 
-## LLaVA-Bench Examples
+<!-- ## LLaVA-Bench Examples
 <p align="center" width="100%">
 <img src="assets/lizi.png" width="100%" alt="Motivation">
-</p>
+</p> -->
 
 
 ## Acknowledgments
@@ -119,6 +127,7 @@ Many thanks to the authors for generously sharing their codes!
 
 ## Citation
 If you find this repository helpful for your project, please consider citing our work :
+```
 @misc{suo2025octopusalleviatinghallucinationdynamic,
       title={Octopus: Alleviating Hallucination via Dynamic Contrastive Decoding}, 
       author={Wei Suo and Lijun Zhang and Mengyang Sun and Lin Yuanbo Wu and Peng Wang and Yanning Zhang},
@@ -128,3 +137,4 @@ If you find this repository helpful for your project, please consider citing our
       primaryClass={cs.CV},
       url={https://arxiv.org/abs/2503.00361}, 
 }
+```
