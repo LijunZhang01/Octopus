@@ -86,7 +86,7 @@ bash eval_bench/scripts/train_token_amber.sh
 ```
 - Need to specify "json_path", "data_path","checkpoint_path","model_path"
 
-- ps: Replace all "/home/zlj/AvisC-master" paths with your own directory paths
+- ps: Replace all "/home/zlj/Octopus" paths with your own directory paths
 
 ## Evaluation
 * **AMBER**: 
@@ -95,7 +95,7 @@ bash eval_bench/scripts/eval_token_amber.sh
 ```
 - Need to specify "json_path", "data_path","checkpoint_path","model_path"
 
-- ps: Replace all "/home/zlj/AvisC-master" paths with your own directory paths
+- ps: Replace all "/home/zlj/Octopus" paths with your own directory paths
 
 
 

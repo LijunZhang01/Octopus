@@ -13,23 +13,23 @@ masking_scheme="zeros"			# "10:1" or "-1"
 lamb=1.0
 gpus=0
 max_token=64
-log_path="/home/zlj/AvisC-master/log"
+log_path="/home/zlj/Octopus/log"
 cd_alpha=2.5
-amber_path="/home/zlj/AvisC-master/"
+amber_path="/home/zlj/Octopus/"
 use_cd=False
 use_m3id=False
-json_path="/home/zlj/Avisc-release/data/train.json"
-data_path="/home/zlj/AvisC-master/dataset/images/val2014"
+json_path="/home/zlj/Octopus/data/train.json"
+data_path="/home/zlj/Octopus/dataset/images/val2014"
 
-model_path="/home/zlj/AvisC-master/llava-v1.5-7b"
+model_path="/home/zlj/Octopus/llava-v1.5-7b"
 ####################################################
 
 
-# checkpoint_path="/home/zlj/AvisC-master/checkpoint/0715dpo"
-checkpoint_path="/home/zlj/AvisC-master/checkpoint/0123_shijian_sample"
+# checkpoint_path="/home/zlj/Octopus/checkpoint/0715dpo"
+checkpoint_path="/home/zlj/Octopus/checkpoint/0123_shijian_sample"
 result_json_path="${checkpoint_path}/Amber_result.json"
 export CUDA_VISIBLE_DEVICES=${gpus}
-python /home/zlj/Avisc-release/eval_bench/train_token_amber.py \
+python /home/zlj/Octopus/eval_bench/train_token_amber.py \
     --seed ${seed} \
     --model-path ${model_path} \
     --json_path ${json_path} \

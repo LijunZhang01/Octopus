@@ -14,25 +14,25 @@ lamb=1.0
 gpus=4
 # max_token=64
 max_token=64
-log_path="/home/zlj/AvisC-master/log"
+log_path="/home/zlj/Octopus/log"
 cd_alpha=2.5
-amber_path="/home/zlj/AvisC-master/"
+amber_path="/home/zlj/Octopus/"
 use_cd=False
 use_m3id=False
 
-json_path="/home/zlj/AvisC-master/data/query/query_all.json"
-data_path="/home/zlj/AvisC-master/data/image"
+json_path="/home/zlj/Octopus/data/query/query_all.json"
+data_path="/home/zlj/Octopus/data/image"
 
 
-model_path="/home/zlj/AvisC-master/llava-v1.5-7b"
+model_path="/home/zlj/Octopus/llava-v1.5-7b"
 ####################################################
 
 
-checkpoint_path="/home/zlj/AvisC-master/checkpoint/0808dpo_coco"
+checkpoint_path="/home/zlj/Octopus/checkpoint/0808dpo_coco"
 
 result_json_path="${checkpoint_path}/Amber_result.json"
 export CUDA_VISIBLE_DEVICES=${gpus}
-python /home/zlj/Avisc-release/eval_bench/eval_token_amber.py \
+python /home/zlj/Octopus/eval_bench/eval_token_amber.py \
     --seed ${seed} \
     --model-path ${model_path} \
     --json_path ${json_path} \
