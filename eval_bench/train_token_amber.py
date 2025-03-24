@@ -136,18 +136,20 @@ class MyModel(torch.nn.Module):
         self.n_query = n_query
         self.model = model
         self.Llama = model.model
-        self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float16))
-        # self.mlp = torch.nn.Linear(4096, 4).to(dtype=torch.float16)
-        self.cls_token = torch.nn.Parameter(torch.randn(1, 4096).to(dtype=torch.float16))
+        # self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float16))
+        # self.cls_token = torch.nn.Parameter(torch.randn(1, 4096).to(dtype=torch.float16))
+
+        self.queries = torch.nn.Parameter(torch.randn(n_query, d_model).to(dtype=torch.float16))
+        self.cls_token = torch.nn.Parameter(torch.randn(1, d_model).to(dtype=torch.float16))
         decoder_layer = torch.nn.TransformerDecoderLayer(d_model, nhead).to(dtype=torch.float16)
         decoder_layer.apply(self.init_weights)
         self.transformer = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers).to(dtype=torch.float16)
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(d_model, 1024).to(dtype=torch.float16),
+            torch.nn.Linear(d_model, d_model//4).to(dtype=torch.float16),
             # torch.nn.ReLU(),
             torch.nn.LeakyReLU(),
             # torch.nn.Sigmoid(),
-            torch.nn.Linear(1024, num_classes).to(dtype=torch.float16)
+            torch.nn.Linear(d_model//4, num_classes).to(dtype=torch.float16)
         )
         for layer in self.mlp:
             if isinstance(layer, torch.nn.Linear):
@@ -260,7 +262,7 @@ class MyModel(torch.nn.Module):
         assistant_model=None,
         streamer=None,
         **kwargs):
-        tt=self.model.generate(inputs,
+        reponse_gen=self.model.generate(inputs,
         generation_config,
         logits_processor,
         stopping_criteria,
@@ -270,7 +272,7 @@ class MyModel(torch.nn.Module):
         streamer,
         mymodel=self,
         **kwargs)
-        return tt
+        return reponse_gen
 
 
 def main():
@@ -356,65 +358,7 @@ def main():
 
     # Create an optimizer that only updates the parameters that require gradients
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, policy.parameters()), lr=1e-5, eps=1e-4)
-    # optimizer1 = torch.optim.Adam(filter(lambda p: p.requires_grad, policy.parameters()), lr=1e-5)
-
-    # scheduler = transformers.get_scheduler(
-    #     name='linear',
-    #     optimizer=optimizer1,
-    #     num_warmup_steps=100 * args.n_ppo_epoch,
-    #     num_training_steps=total_steps * args.n_ppo_epoch,
-    # )
-    # trainer = PPOTrainer(
-    #     args=args,
-    #     train_dataloader=AMBER_loader,
-    #     ref_policy_model=ref_policy,
-    #     policy_model=policy,
-    #     tokenizer=tokenizer,
-    #     optimizer=optimizer,
-    #     scheduler=scheduler,
-    # )
-    # for i in range(5):
-    #     for batch_id, data in tqdm(enumerate(AMBER_loader), total=len(AMBER_loader)):
-    #         # trainer.train(data,batch_id*(i+1))
-    #         trainer.train(data, len(AMBER_loader) * i + batch_id)
-    #         for name, parms in policy.named_parameters():
-    #             if "model." not in name and 'cls' not in name:
-    #                 print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data),
-    #                       ' -->grad_value:', torch.mean(parms.grad))
-    #     torch.save({
-    #         'query': policy.queries.data,
-    #         'cls': policy.cls_token.data,
-    #         'mlp_state_dict': policy.mlp.state_dict(),
-    #         'transformer': policy.transformer.state_dict()
-    #     }, os.path.join(args.checkpoint_path, 'result_{}.pth'.format(i)))
-    # # steps = list(range(total_steps + 1))
-    # # steps = tqdm(steps)
-    # # for step in steps:
-    # #     trainer.train(step)
-    #
-    # # 保存 query 和 MLP 的权重
-    # torch.save({
-    #     'query': policy.queries.data,
-    #     'cls': policy.cls_token.data,
-    #     'mlp_state_dict': policy.mlp.state_dict(),
-    #     'transformer': policy.transformer.state_dict()
-    # }, os.path.join(args.checkpoint_path, 'result.pth'))
-    #
-    # # 验证时加载模型权重
-    # def load_model(model_path):
-    #     model_test = MyModel(model).to(device)
-    #     checkpoint = torch.load(model_path)
-    #     model_test.queries.data = checkpoint['query']
-    #     model_test.cls_token.data = checkpoint['cls']
-    #     model_test.mlp.load_state_dict(checkpoint['mlp_state_dict'])
-    #     model_test.transformer.load_state_dict(checkpoint['transformer'])
-    #     # for param in model_test.gpt2.parameters():
-    #     #     param.requires_grad = False
-    #     return model_test
-    #
-    # # 加载保存的模型权重
-    # loaded_model = load_model(os.path.join(args.checkpoint_path, 'result.pth'))
-    # # 然后你可以使用 loaded_model 进行验证
+    
     writer = SummaryWriter(args.checkpoint_path)
     for epoch in range(args.epochs):
         print("=="*20)
@@ -476,29 +420,7 @@ def main():
             keywords = [stop_str]
             stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
 
-            # with torch.inference_mode():
-            #     with torch.no_grad():
-            #         output_ids = model.generate(input_ids,
-            #                                     images=image_tensor.half().cuda(),
-            #                                     images_cd=None,
-            #                                     cd_alpha=args.cd_alpha,
-            #                                     cd_beta=args.cd_beta,
-            #                                     do_sample=True,
-            #                                     temperature=args.temperature,
-            #                                     top_p=args.top_p,
-            #                                     top_k=args.top_k,
-            #                                     max_new_tokens=args.max_token,
-            #                                     use_cache=False,
-            #                                     use_avisc=False,
-            #                                     layer_gamma=args.layer_gamma,
-            #                                     masking_scheme=args.masking_scheme,
-            #                                     lamb=args.lamb,
-            #                                     use_m3id=False,
-            #                                     output_scores=True,
-            #                                     output_attentions=True,
-            #                                     is_eval=True,
-            #                                     output_hidden_states=True)
-
+            
             # with torch.enable_grad():
             output_ids = policy.generate(input_ids,
                                         images=image_tensor.half().cuda(),
@@ -565,158 +487,7 @@ def main():
         'mlp_state_dict': policy.mlp.state_dict(),
         'transformer': policy.transformer.state_dict()
     }, os.path.join(args.checkpoint_path, 'result.pth'))
-    #     input_token_len = input_ids.shape[1]
-    #     n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
-    #     if n_diff_input_output > 0:
-    #         print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
-    #     outputs = tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)
-    #     outputs = [_.strip() for _ in outputs]
-    #     outputs = [_[:-len(stop_str)] if _.endswith(stop_str) else _ for _ in outputs]
-    #
-    #     for ip, q, a in zip(image_path, qs, outputs):
-    #         logger.info(f"[{ip}]")
-    #         logger.info(f"Q: {q}")
-    #         logger.info(f"A: {a}")
-    #
-    #     for batch_id in range(len(ids)):
-    #         if ids[batch_id] > 1004:
-    #             outputs[batch_id] = recorder(outputs[batch_id])
-    #
-    #     for id, a in zip(ids, outputs):
-    #         item = {
-    #             "id": int(id),
-    #             "response": a
-    #         }
-    #         result.append(item)
-    #
-    # with open(result_json_path, 'w', encoding='utf-8') as f:
-    #     json.dump(result, f, ensure_ascii=False, indent=4)
-
-    # 验证时加载模型权重
-
-
-
-    ###########################################################
-    #                        验证模型
-    ###########################################################
-    # def load_model(model_path):
-    #     model_test = MyModel(model).to(device)
-    #     checkpoint = torch.load(model_path)
-    #     model_test.queries.data = checkpoint['query']
-    #     model_test.cls_token.data = checkpoint['cls']
-    #     model_test.mlp.load_state_dict(checkpoint['mlp_state_dict'])
-    #     model_test.transformer.load_state_dict(checkpoint['transformer'])
-    #     # for param in model_test.gpt2.parameters():
-    #     #     param.requires_grad = False
-    #     return model_test
-
-    # # 加载保存的模型权重
-    # loaded_model = load_model(os.path.join(args.checkpoint_path, 'result.pth'))
-    # # 然后你可以使用 loaded_model 进行验证
-
-    # for batch_id, data in tqdm(enumerate(AMBER_loader), total=len(AMBER_loader)):
-    #     image = data["image"]
-    #     qs = data["query"]
-    #     ids = data["id"]
-    #     image_path = data["image_path"]
-
-    #     # ==============================================
-    #     #             Text prompt setting
-    #     # ==============================================
-    #     if model.config.mm_use_im_start_end:
-    #         qu = [DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + _ for _ in qs]
-    #     else:
-    #         qu = [DEFAULT_IMAGE_TOKEN + '\n' + _ for _ in qs]
-
-    #     input_ids = []
-
-    #     for i in range(args.batch_size):
-    #         conv = conv_templates[args.conv_mode].copy()
-    #         conv.append_message(conv.roles[0], qu[i])
-    #         conv.append_message(conv.roles[1], None)
-    #         prompt = conv.get_prompt()
-
-    #         # ==============================================
-    #         #             Image tensor setting
-    #         # ==============================================
-
-    #         input_id = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(
-    #             0).cuda()
-
-    #         input_ids.append(
-    #             input_id
-    #         )
-
-    #     def make_batch(input_ids):
-    #         input_ids = [_.squeeze(0) for _ in input_ids]
-    #         max_len = max([_.shape[0] for _ in input_ids])
-    #         input_ids = [torch.cat([torch.zeros(max_len - _.shape[0], dtype=torch.long).cuda(), _], dim=0) for _ in
-    #                      input_ids]
-    #         return torch.stack(input_ids, dim=0)
-
-    #     input_ids = make_batch(input_ids)
-    #     image_tensor = image
-
-    #     # ==============================================
-    #     #             avisc method setting
-    #     # ==============================================
-    #     image_tensor_cd = add_diffusion_noise(image_tensor, noise_step=500)
-
-    #     stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
-    #     keywords = [stop_str]
-    #     stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
-
-
-    #     with torch.inference_mode():
-    #         with torch.no_grad():
-    #             input_token_len = input_ids.shape[1]
-    #             output_ids = loaded_model.generate(input_ids,
-    #                                          images=image_tensor.half().cuda(),
-    #                                          images_cd=image_tensor_cd.half().cuda(),
-    #                                          cd_alpha=args.cd_alpha,
-    #                                          cd_beta=args.cd_beta,
-    #                                          do_sample=True,
-    #                                          temperature=args.temperature,
-    #                                          top_p=args.top_p,
-    #                                          top_k=args.top_k,
-    #                                          max_new_tokens=args.max_token,
-    #                                          use_cache=True,
-    #                                          use_avisc=True,
-    #                                          layer_gamma=args.layer_gamma,
-    #                                          masking_scheme=args.masking_scheme,
-    #                                          lamb=args.lamb,
-    #                                          use_m3id=True,
-    #                                          output_scores=True,
-    #                                          output_attentions=True,
-    #                                          is_eval=True,
-    #                                          return_dict_in_generate=False, )
-    #     input_token_len = input_ids.shape[1]
-    #     n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
-    #     if n_diff_input_output > 0:
-    #         print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
-    #     outputs = tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)
-    #     outputs = [_.strip() for _ in outputs]
-    #     outputs = [_[:-len(stop_str)] if _.endswith(stop_str) else _ for _ in outputs]
-
-    #     for ip, q, a in zip(image_path, qs, outputs):
-    #         logger.info(f"[{ip}]")
-    #         logger.info(f"Q: {q}")
-    #         logger.info(f"A: {a}")
-
-    #     for batch_id in range(len(ids)):
-    #         if ids[batch_id] > 1004:
-    #             outputs[batch_id] = recorder(outputs[batch_id])
-
-    #     for id, a in zip(ids, outputs):
-    #         item = {
-    #             "id": int(id),
-    #             "response": a
-    #         }
-    #         result.append(item)
-
-    # with open(result_json_path, 'w', encoding='utf-8') as f:
-    #     json.dump(result, f, ensure_ascii=False, indent=4)
-
+    
 
 if __name__ == "__main__":
     main()

@@ -139,18 +139,18 @@ class MyModel(torch.nn.Module):
         self.n_query = n_query
         self.model = model
         self.Llama = model.model
-        self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float16))
+        self.queries = torch.nn.Parameter(torch.randn(n_query, d_model).to(dtype=torch.float16))
         # self.mlp = torch.nn.Linear(4096, 4).to(dtype=torch.float16)
-        self.cls_token = torch.nn.Parameter(torch.randn(1, 4096).to(dtype=torch.float16))
+        self.cls_token = torch.nn.Parameter(torch.randn(1, d_model).to(dtype=torch.float16))
         decoder_layer = torch.nn.TransformerDecoderLayer(d_model, nhead).to(dtype=torch.float16)
         decoder_layer.apply(self.init_weights)
         self.transformer = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers).to(dtype=torch.float16)
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(d_model, 1024).to(dtype=torch.float16),
+            torch.nn.Linear(d_model, d_model//4).to(dtype=torch.float16),
             # torch.nn.ReLU(),
             torch.nn.LeakyReLU(),
             # torch.nn.Sigmoid(),
-            torch.nn.Linear(1024, num_classes).to(dtype=torch.float16)
+            torch.nn.Linear(d_model//4, num_classes).to(dtype=torch.float16)
         )
         for layer in self.mlp:
             if isinstance(layer, torch.nn.Linear):
@@ -270,7 +270,7 @@ class MyModel(torch.nn.Module):
         assistant_model=None,
         streamer=None,
         **kwargs):
-        tt=self.model.generate(inputs,
+        reponse_gen=self.model.generate(inputs,
         generation_config,
         logits_processor,
         stopping_criteria,
@@ -280,7 +280,7 @@ class MyModel(torch.nn.Module):
         streamer,
         mymodel=self,
         **kwargs)
-        return tt
+        return reponse_gen
 
 
 def main():
