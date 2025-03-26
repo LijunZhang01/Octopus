@@ -19,9 +19,9 @@ class AMBERDataSet(Dataset):
         self.num_gen = num_gen
         self.num_dis = num_dis  
         
-        gen_idx = random.sample(range(1, GEN_LEN), self.num_gen)
+        # gen_idx = random.sample(range(1, GEN_LEN), self.num_gen)
         # gen_idx = random.sample(range(1, 30504+1), self.num_gen)
-        # gen_idx = random.sample(range(0, 10000+1), self.num_gen)
+        gen_idx = random.sample(range(0, 10000+1), self.num_gen)
         # gen_idx = random.sample(range(1, 97+1), self.num_gen)
         # print("*"*20)
         # print(gen_idx)
@@ -45,8 +45,8 @@ class AMBERDataSet(Dataset):
                 query_list.append(line['query'])
                 id_list.append(line['id'])
                 # lab.append(line['label'])
-                # yw_list.append(torch.tensor(line['y_w']))
-                # yl_list.append(torch.tensor(line['y_l']))
+                yw_list.append(torch.tensor(line['y_w']))
+                yl_list.append(torch.tensor(line['y_l']))
             
 
         assert len(image_list) == len(query_list)
@@ -78,9 +78,9 @@ class AMBERDataSet(Dataset):
             yl = self.yl_list[index]
 
             # return {"image": image, "query": query, "id": id, "image_path": image_path, "label": lab}
-            return {"image": image, "query": query, "id": id, "image_path": image_path}
+            # return {"image": image, "query": query, "id": id, "image_path": image_path}
             # return {"image": image, "query": query, "id": id, "image_path": image_path,'y_w':yw,'y_l':yl, "label": lab}
-            # return {"image": image, "query": query, "id": id, "image_path": image_path,'y_w':yw,'y_l':yl}
+            return {"image": image, "query": query, "id": id, "image_path": image_path,'y_w':yw,'y_l':yl}
 
         elif self.model == 'qwen-vl':
             raw_image = Image.open(image_path).convert("RGB")

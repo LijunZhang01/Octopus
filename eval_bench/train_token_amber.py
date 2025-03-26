@@ -129,28 +129,33 @@ def recorder(out):
         return "No"
     else:
         return "Yes"
-
 class MyModel(torch.nn.Module):
     def __init__(self, model, d_model=4096, nhead=2, num_decoder_layers=2, num_classes=4, n_query=4,bt=1):
         super(MyModel, self).__init__()
         self.n_query = n_query
         self.model = model
         self.Llama = model.model
-        # self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float16))
-        # self.cls_token = torch.nn.Parameter(torch.randn(1, 4096).to(dtype=torch.float16))
-
-        self.queries = torch.nn.Parameter(torch.randn(n_query, d_model).to(dtype=torch.float16))
-        self.cls_token = torch.nn.Parameter(torch.randn(1, d_model).to(dtype=torch.float16))
-        decoder_layer = torch.nn.TransformerDecoderLayer(d_model, nhead).to(dtype=torch.float16)
-        decoder_layer.apply(self.init_weights)
-        self.transformer = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers).to(dtype=torch.float16)
+        # self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float32))
+        # self.mlp = torch.nn.Linear(4096, 4).to(dtype=torch.float16)
+        self.cls_token = torch.nn.Parameter(torch.randn(1, d_model).to(dtype=torch.float32))
+        encoder_layer = torch.nn.TransformerEncoderLayer(d_model, nhead).to(dtype=torch.float32)
+        encoder_layer.apply(self.init_weights)
+        self.transformer = torch.nn.TransformerEncoder(encoder_layer, num_decoder_layers).to(dtype=torch.float32)
+        # self.LSTM = torch.nn.LSTM(4096, 1024, num_layers=2, batch_first=True).to(dtype=torch.float32)
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(d_model, d_model//4).to(dtype=torch.float16),
+            torch.nn.Linear(d_model, d_model//4).to(dtype=torch.float32),
             # torch.nn.ReLU(),
             torch.nn.LeakyReLU(),
             # torch.nn.Sigmoid(),
-            torch.nn.Linear(d_model//4, num_classes).to(dtype=torch.float16)
+            torch.nn.Linear(d_model//4, num_classes).to(dtype=torch.float32)
         )
+        # 使用凯明初始化来初始化参数
+        # for name, param in self.LSTM.named_parameters():
+        #     if 'weight' in name:
+        #         torch.nn.init.kaiming_normal_(param)
+        #     elif 'bias' in name:
+        #         torch.nn.init.constant_(param, 0)  # 将偏置初始化为0
+
         for layer in self.mlp:
             if isinstance(layer, torch.nn.Linear):
                 torch.nn.init.kaiming_uniform_(layer.weight, nonlinearity='relu')
@@ -203,8 +208,7 @@ class MyModel(torch.nn.Module):
         if mask_idx is not None and past_key_values is None:
 
             for input_embed, idx in zip(inputs_embeds, mask_idx):
-                # input_embed[idx] = torch.randn(input_embed[idx].size(), dtype=input_embed.dtype).to(input_embed.device) * 0.1
-                #input_embed[idx] = add_diffusion_noise(input_embed[idx], noise_step=500)
+                
                 if masking_scheme.lower() == "ones":
                     input_embed[idx + 35] = 1.0
                     # print("ones")
@@ -244,10 +248,10 @@ class MyModel(torch.nn.Module):
                 attentions=outputs.attentions,
             )
         inputs_transformer = torch.cat(
-            (self.cls_token.unsqueeze(0).expand(self.bt, -1, -1), self.queries.unsqueeze(0).expand(self.bt, -1, -1)), dim=1)
-        # inputs_transformer = inputs_transformer.to(dtype=torch.float32)
-        out_transformer = self.transformer(inputs_transformer.transpose(0, 1),hidden_states.transpose(0, 1)).transpose(0, 1)
-
+            (self.cls_token.unsqueeze(0).expand(self.bt, -1, -1), hidden_states.to(dtype=torch.float32)), dim=1)
+ 
+        out_transformer = self.transformer(inputs_transformer)
+        
         logits_mlp = self.mlp(out_transformer)
         return logits_mlp[:, 0, :],output
 
@@ -273,6 +277,150 @@ class MyModel(torch.nn.Module):
         mymodel=self,
         **kwargs)
         return reponse_gen
+
+# class MyModel(torch.nn.Module):
+#     def __init__(self, model, d_model=4096, nhead=2, num_decoder_layers=2, num_classes=4, n_query=4,bt=1):
+#         super(MyModel, self).__init__()
+#         self.n_query = n_query
+#         self.model = model
+#         self.Llama = model.model
+#         # self.queries = torch.nn.Parameter(torch.randn(n_query, 4096).to(dtype=torch.float16))
+#         # self.cls_token = torch.nn.Parameter(torch.randn(1, 4096).to(dtype=torch.float16))
+
+#         self.queries = torch.nn.Parameter(torch.randn(n_query, d_model).to(dtype=torch.float16))
+#         self.cls_token = torch.nn.Parameter(torch.randn(1, d_model).to(dtype=torch.float16))
+#         decoder_layer = torch.nn.TransformerDecoderLayer(d_model, nhead).to(dtype=torch.float16)
+#         decoder_layer.apply(self.init_weights)
+#         self.transformer = torch.nn.TransformerDecoder(decoder_layer, num_decoder_layers).to(dtype=torch.float16)
+#         self.mlp = torch.nn.Sequential(
+#             torch.nn.Linear(d_model, d_model//4).to(dtype=torch.float16),
+#             # torch.nn.ReLU(),
+#             torch.nn.LeakyReLU(),
+#             # torch.nn.Sigmoid(),
+#             torch.nn.Linear(d_model//4, num_classes).to(dtype=torch.float16)
+#         )
+#         for layer in self.mlp:
+#             if isinstance(layer, torch.nn.Linear):
+#                 torch.nn.init.kaiming_uniform_(layer.weight, nonlinearity='relu')
+#                 torch.nn.init.constant_(layer.bias, 0)  # 偏置通常初始化为0
+#         self.bt=bt
+#     def init_weights(self, m):
+#         if isinstance(m, torch.nn.Linear):
+#             # 使用 He 初始化
+#             torch.nn.init.kaiming_uniform_(m.weight, a=math.sqrt(5))
+#             if m.bias is not None:
+#                 # 初始化偏置为0
+#                 fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(m.weight)
+#                 bound = 1 / math.sqrt(fan_in)
+#                 torch.nn.init.uniform_(m.bias, -bound, bound)
+#         elif isinstance(m, torch.nn.LayerNorm):
+#             # 层归一化层的初始化
+#             torch.nn.init.constant_(m.weight, 1.0)
+#             torch.nn.init.constant_(m.bias, 0)
+
+#     def forward(self,
+#         input_ids= None,
+#         attention_mask= None,
+#         past_key_values = None,
+#         inputs_embeds = None,
+#         labels = None,
+#         use_cache = None,
+#         output_attentions = None,
+#         output_hidden_states = None,
+#         images = None,
+#         images_cd = None,
+#         cd_beta = None,
+#         cd_alpha = None,
+#         img_idx = None,
+#         mask_idx = None,
+#         return_dict = None,
+#         kernel_size=None,
+#         use_avisc=None,
+#         layer_gamma=None,
+#         masking_scheme=None,
+#         lamb=None,
+#         question_id=None,
+#         use_m3id=None,
+#         is_eval=None,
+#         temp=None,):
+
+#         attention_mask = torch.ones(input_ids.shape[:2], dtype=torch.long, device=input_ids.device)
+#         if input_ids is not None:
+#             input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.model.prepare_inputs_labels_for_multimodal(
+#                 input_ids, attention_mask, past_key_values, labels, images)
+#         if mask_idx is not None and past_key_values is None:
+
+#             for input_embed, idx in zip(inputs_embeds, mask_idx):
+#                 # input_embed[idx] = torch.randn(input_embed[idx].size(), dtype=input_embed.dtype).to(input_embed.device) * 0.1
+#                 #input_embed[idx] = add_diffusion_noise(input_embed[idx], noise_step=500)
+#                 if masking_scheme.lower() == "ones":
+#                     input_embed[idx + 35] = 1.0
+#                     # print("ones")
+#                 elif masking_scheme.lower() == "zeros":
+#                     input_embed[idx + 35] = 0.0
+#                     # print("zeros")
+#                 elif masking_scheme.lower() == "noise":
+#                     input_embed[idx + 35] = torch.randn(input_embed[idx + 35].size(), dtype=input_embed.dtype).to(input_embed.device)
+#                     # print("noise")
+#                 else:
+#                     input_embed[idx + 35] = 0.0
+
+
+#         with torch.no_grad():
+#             outputs = self.Llama(
+#                 input_ids=input_ids,
+#                 attention_mask=attention_mask,
+#                 past_key_values=past_key_values,
+#                 inputs_embeds=inputs_embeds,
+#                 use_cache=True,
+#                 output_attentions=True,
+#                 output_hidden_states=False,
+#                 return_dict=True
+#             )
+#         hidden_states = outputs[0]
+#         logits = self.model.lm_head(hidden_states)
+#         loss = None
+
+#         if not return_dict:
+#             output = (logits,) + outputs[1:]
+#         else:
+#             output = CausalLMOutputWithPast(
+#                 loss=loss,
+#                 logits=logits,
+#                 past_key_values=outputs.past_key_values,
+#                 hidden_states=outputs.hidden_states,
+#                 attentions=outputs.attentions,
+#             )
+#         inputs_transformer = torch.cat(
+#             (self.cls_token.unsqueeze(0).expand(self.bt, -1, -1), self.queries.unsqueeze(0).expand(self.bt, -1, -1)), dim=1)
+#         # inputs_transformer = inputs_transformer.to(dtype=torch.float32)
+#         out_transformer = self.transformer(inputs_transformer.transpose(0, 1),hidden_states.transpose(0, 1)).transpose(0, 1)
+
+#         logits_mlp = self.mlp(out_transformer)
+#         return logits_mlp[:, 0, :],output
+
+
+#     def generate(self,
+#         inputs=None,
+#         generation_config=None,
+#         logits_processor=None,
+#         stopping_criteria=None,
+#         prefix_allowed_tokens_fn=None,
+#         synced_gpus=None,
+#         assistant_model=None,
+#         streamer=None,
+#         **kwargs):
+#         reponse_gen=self.model.generate(inputs,
+#         generation_config,
+#         logits_processor,
+#         stopping_criteria,
+#         prefix_allowed_tokens_fn,
+#         synced_gpus,
+#         assistant_model,
+#         streamer,
+#         mymodel=self,
+#         **kwargs)
+#         return reponse_gen
 
 
 def main():
