@@ -2,7 +2,7 @@
 <img src="assets/title.png" width="20%" alt="EYES_FOREST">
 </p>
 
-# Octopus: Alleviating Hallucination via Dynamic Contrastive Decoding
+# Octopus: Alleviating Hallucination via Dynamic Contrastive Decoding (CVPR2025 Highlights)
 <!-- Arxiv Link, Project Link -->
 <div style='display:flex; gap: 0.25rem; '>
 <a href="https://arxiv.org/abs/2503.00361"><img src="https://img.shields.io/badge/arXiv-2503.00361-b31b1b.svg"></a>
